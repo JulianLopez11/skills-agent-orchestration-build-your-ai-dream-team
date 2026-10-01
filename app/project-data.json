@@ -1,0 +1,36 @@
+{
+  "projects": [
+    {
+      "name": "Contributor Onboarding",
+      "owner": "Mona Patel",
+      "status": "Active",
+      "recentActivity": "Published the updated setup guide and opened a call for first-time contributor feedback.",
+      "priority": "High",
+      "summary": "Make it easier for new contributors to find a first task and get a local environment running."
+    },
+    {
+      "name": "Release Readiness",
+      "owner": "Jordan Lee",
+      "status": "On track",
+      "recentActivity": "Completed the release checklist review and confirmed the remaining documentation updates.",
+      "priority": "Medium",
+      "summary": "Coordinate final checks across maintainers so the next release is predictable and well documented."
+    },
+    {
+      "name": "Accessibility Improvements",
+      "owner": "Avery Chen",
+      "status": "At risk",
+      "recentActivity": "Collected keyboard-navigation feedback; two high-impact fixes still need an implementation owner.",
+      "priority": "High",
+      "summary": "Address the most visible accessibility gaps and make core workflows work well for every contributor."
+    },
+    {
+      "name": "Community Health",
+      "owner": "Sam Rivera",
+      "status": "Planning",
+      "recentActivity": "Drafted a lightweight discussion guide for the next community feedback session.",
+      "priority": "Low",
+      "summary": "Create a sustainable feedback loop that helps the team spot contributor friction early."
+    }
+  ]
+}

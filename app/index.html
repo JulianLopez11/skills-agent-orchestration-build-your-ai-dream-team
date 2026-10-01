@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A contributor-friendly overview of project ownership, status, activity, and priority."
+    />
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer>
+      const requiredFields = [
+        "name",
+        "owner",
+        "status",
+        "recentActivity",
+        "priority",
+        "summary",
+      ];
+
+      function createTextElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        element.className = className;
+        element.textContent = text;
+        return element;
+      }
+
+      function createProjectCard(project) {
+        const card = document.createElement("article");
+        card.className = "project-card";
+
+        const header = document.createElement("div");
+        header.className = "project-card-header";
+
+        const heading = document.createElement("div");
+        heading.className = "project-card-heading";
+        heading.append(
+          createTextElement("h2", "project-card-title", project.name),
+        );
+
+        const owner = document.createElement("p");
+        owner.className = "project-card-owner";
+        owner.append("Owned by ");
+        owner.append(createTextElement("strong", "", project.owner));
+        heading.append(owner);
+
+        const badges = document.createElement("div");
+        badges.className = "project-card-badges";
+
+        const status = createTextElement(
+          "span",
+          "status-badge",
+          project.status,
+        );
+        status.dataset.status = project.status.toLowerCase().replace(/\s+/g, "-");
+        badges.append(status);
+
+        const priority = createTextElement(
+          "span",
+          "priority-badge",
+          `Priority: ${project.priority}`,
+        );
+        priority.dataset.priority = project.priority.toLowerCase();
+        badges.append(priority);
+
+        header.append(heading, badges);
+        card.append(
+          header,
+          createTextElement(
+            "p",
+            "project-card-summary",
+            project.summary,
+          ),
+          createTextElement(
+            "p",
+            "project-card-activity",
+            `Recent activity: ${project.recentActivity}`,
+          ),
+        );
+
+        return card;
+      }
+
+      function showMessage(container, title, description, modifier, role) {
+        container.replaceChildren();
+        container.className = `dashboard-message ${modifier}`;
+        container.setAttribute("role", role);
+
+        const heading = createTextElement(
+          "h2",
+          "dashboard-message-title",
+          title,
+        );
+        container.append(heading);
+        if (description) {
+          container.append(createTextElement("p", "", description));
+        }
+      }
+
+      async function loadProjects() {
+        const grid = document.querySelector("#project-grid");
+        const message = document.querySelector("#dashboard-message");
+        const meta = document.querySelector("#dashboard-meta");
+        const content = document.querySelector("#dashboard-content");
+
+        try {
+          const response = await fetch("project-data.json");
+          if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}.`);
+          }
+
+          const data = await response.json();
+          if (!data || !Array.isArray(data.projects)) {
+            throw new Error('Project data must contain a "projects" array.');
+          }
+
+          for (const [index, project] of data.projects.entries()) {
+            if (
+              !project ||
+              requiredFields.some(
+                (field) =>
+                  typeof project[field] !== "string" ||
+                  project[field].trim() === "",
+              )
+            ) {
+              throw new Error(
+                `Project ${index + 1} is missing one or more required text fields.`,
+              );
+            }
+          }
+
+          content.setAttribute("aria-busy", "false");
+          if (data.projects.length === 0) {
+            grid.hidden = true;
+            meta.textContent = "No projects";
+            showMessage(
+              message,
+              "No projects yet",
+              "Project updates will appear here when they are added.",
+              "dashboard-message--empty",
+              "status",
+            );
+            return;
+          }
+
+          grid.replaceChildren(...data.projects.map(createProjectCard));
+          grid.hidden = false;
+          message.hidden = true;
+          meta.textContent = `${data.projects.length} ${
+            data.projects.length === 1 ? "project" : "projects"
+          }`;
+        } catch (error) {
+          content.setAttribute("aria-busy", "false");
+          grid.hidden = true;
+          meta.textContent = "Project data unavailable";
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred.";
+          showMessage(
+            message,
+            "Unable to load projects",
+            `Check that project-data.json is available and valid. ${errorMessage}`,
+            "dashboard-message--error",
+            "alert",
+          );
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadProjects, { once: true });
+    </script>
+  </head>
+  <body>
+    <main class="dashboard" id="dashboard-content" aria-busy="true">
+      <header class="dashboard-header">
+        <div class="dashboard-heading">
+          <p class="dashboard-eyebrow">Team overview</p>
+          <h1 class="dashboard-title">Project Pulse</h1>
+          <p class="dashboard-description">
+            A clear snapshot of what the team is building, who owns it, and
+            where contributors can help.
+          </p>
+        </div>
+        <p class="dashboard-meta" id="dashboard-meta">Loading projects…</p>
+      </header>
+
+      <section aria-label="Projects">
+        <div
+          class="dashboard-message"
+          id="dashboard-message"
+          role="status"
+          aria-live="polite"
+        >
+          <h2 class="dashboard-message-title">Loading projects</h2>
+          <p>Gathering the latest project updates.</p>
+        </div>
+        <div
+          class="dashboard-grid"
+          id="project-grid"
+          aria-label="Project cards"
+          hidden
+        ></div>
+      </section>
+    </main>
+  </body>
+</html>
